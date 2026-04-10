@@ -1,0 +1,86 @@
+name: Deploy Laravel Filament to Subdomain
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install & Build Assets (Vite)
+        run: |
+          npm ci
+          npm run build
+
+      # Langkah 1: Sync Code ke Folder pm.harumnya.cloud
+      - name: Deploy and Sync Code
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd /var/www/pm.harumnya.cloud
+
+            # Pastikan izin akses benar
+            sudo chown -R ${{ secrets.USERNAME }}:${{ secrets.USERNAME }} .
+            git config --global --add safe.directory /var/www/pm.harumnya.cloud
+
+            # Pull update terbaru
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Install dependencies
+            composer install --no-dev --no-interaction --optimize-autoloader
+
+      # Langkah 2: Upload hasil build Vite
+      - name: Upload Build Folder
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          source: "public/build"
+          target: "/var/www/pm.harumnya.cloud"
+          overwrite: true
+
+      # Langkah 3: Finalisasi Khusus Filament
+      - name: Finalize & Permissions
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            cd /var/www/pm.harumnya.cloud
+
+            # Buat link storage jika belum ada
+            php artisan storage:link || true
+
+            # Optimasi Filament & Laravel
+            php artisan optimize
+            php artisan filament:upgrade
+            php artisan icons:cache
+
+            # Setel ulang permission
+            sudo chown -R ${{ secrets.USERNAME }}:www-data .
+            sudo chmod -R 775 storage bootstrap/cache public/build
+
+            # Reload PHP-FPM
+            sudo systemctl reload php8.4-fpm
