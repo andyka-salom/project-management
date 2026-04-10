@@ -1,5 +1,5 @@
 <div class="mt-6">
-    <div class="relative">
+    <!-- <div class="relative">
         <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-gray-300 dark:border-gray-600"></div>
         </div>
@@ -8,10 +8,10 @@
                 Or continue with
             </span>
         </div>
-    </div>
-    
-    <div class="mt-6">
-        <a href="{{ route('auth.google') }}" 
+    </div> -->
+
+    <!-- <div class="mt-6">
+        <a href="{{ route('auth.google') }}"
            class="w-full inline-flex justify-center items-center gap-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 shadow-sm transition-all hover:bg-gray-50 dark:hover:bg-gray-700">
             <svg class="h-5 w-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -21,5 +21,5 @@
             </svg>
             Continue with Google
         </a>
-    </div>
+    </div> -->
 </div>
