@@ -84,6 +84,16 @@ class User extends Authenticatable implements FilamentUser
         $this->assignedTickets()->syncWithoutDetaching($ticket->id);
     }
 
+    public function projectRequests(): HasMany
+    {
+        return $this->hasMany(ProjectRequest::class, 'requested_by');
+    }
+
+    public function assignedAnalysis(): HasMany
+    {
+        return $this->hasMany(ProjectRequest::class, 'analyst_id');
+    }
+
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');

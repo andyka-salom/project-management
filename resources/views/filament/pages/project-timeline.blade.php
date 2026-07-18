@@ -76,23 +76,6 @@
                 background-color: #b91c1c !important;
             }
 
-            /* Today marker line styling */
-            .gantt_marker.today {
-                background-color: #EF4444 !important;
-                opacity: 0.8;
-                z-index: 9000;
-            }
-
-            .gantt_marker.today .gantt_marker_content {
-                background-color: #EF4444 !important;
-                color: white !important;
-                font-weight: bold;
-                font-size: 12px;
-                padding: 2px 6px;
-                border-radius: 4px;
-                white-space: nowrap;
-            }
-
             /* Dark Mode Support for dhtmlxGantt */
             .dark .gantt_container,
             .dark .gantt_grid,
@@ -196,153 +179,113 @@
     @push('scripts')
         <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
         <script>
-            let ganttPageInitialized = false;
-            let ganttData = @json($ganttData ?? ['data' => [], 'links' => []]);
+            (function() {
+                var ganttData = @json($ganttData ?? ['data' => [], 'links' => []]);
 
-            function waitForGantt(callback) {
-                if (typeof gantt !== 'undefined') {
-                    callback();
-                } else {
-                    setTimeout(() => waitForGantt(callback), 100);
-                }
-            }
-
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('Page DOM ready, waiting for dhtmlxGantt...');
-                waitForGantt(() => {
-                    console.log('dhtmlxGantt loaded, initializing...');
-                    initializeGanttPage();
-                });
-            });
-
-            document.addEventListener('livewire:navigated', function() {
-                console.log('Livewire navigated, reinitializing gantt...');
-                if (ganttPageInitialized) {
-                    gantt.clearAll();
-                    ganttPageInitialized = false;
-                }
-                waitForGantt(() => {
-                    initializeGanttPage();
-                });
-            });
-
-            function initializeGanttPage() {
-                try {
-                    console.log('Page dhtmlxGantt data:', ganttData);
-
-                    if (!ganttData.data || ganttData.data.length === 0) {
-                        console.log('No page gantt data available');
-                        return;
-                    }
-
-                    const container = document.getElementById('gantt_here');
-                    if (!container) {
-                        console.error('Page Gantt container not found');
-                        return;
-                    }
-
-                    // ✨ Enable marker plugin for today line
-                    gantt.plugins({
-                        marker: true
-                    });
-
-                    gantt.config.date_format = "%d-%m-%Y %H:%i";
-
-                    gantt.config.scales = [{
-                            unit: "year",
-                            step: 1,
-                            format: "%Y"
-                        },
-                        {
-                            unit: "month",
-                            step: 1,
-                            format: "%F"
+                function resetGantt() {
+                    if (typeof gantt === 'undefined') return;
+                    try {
+                        if (window._projectGanttReady) {
+                            gantt.clearAll();
                         }
-                    ];
+                    } catch(e) {}
+                    window._projectGanttReady = false;
 
-                    gantt.config.readonly = true;
-                    gantt.config.drag_move = false;
-                    gantt.config.drag_resize = false;
-                    gantt.config.drag_progress = false;
-                    gantt.config.drag_links = false;
-
-                    gantt.config.grid_width = 350;
-                    gantt.config.row_height = 40;
-                    gantt.config.task_height = 32;
-                    gantt.config.bar_height = 24;
-
-                    gantt.config.columns = [{
-                            name: "text",
-                            label: "Project Name",
-                            width: 200,
-                            tree: true
-                        },
-                        {
-                            name: "status",
-                            label: "Status",
-                            width: 100,
-                            align: "center"
-                        },
-                        {
-                            name: "duration",
-                            label: "Duration",
-                            width: 50,
-                            align: "center"
-                        }
-                    ];
-
-                    gantt.templates.task_class = function(start, end, task) {
-                        return task.is_overdue ? "overdue" : "";
-                    };
-
-                    gantt.templates.tooltip_text = function(start, end, task) {
-                        return `<b>Project:</b> ${task.text}<br/>
-                                <b>Status:</b> ${task.status}<br/>
-                                <b>Duration:</b> ${task.duration} day(s)<br/>
-                                <b>Progress:</b> ${Math.round(task.progress * 100)}%<br/>
-                                <b>Start:</b> ${gantt.templates.tooltip_date_format(start)}<br/>
-                                <b>End:</b> ${gantt.templates.tooltip_date_format(end)}
-                                ${task.is_overdue ? '<br/><b style="color: #ef4444;">⚠️ OVERDUE</b>' : ''}`;
-                    };
-
-                    if (!ganttPageInitialized) {
-                        gantt.init("gantt_here");
-                        ganttPageInitialized = true;
-                        console.log('Gantt initialized for the first time');
-                    }
-
-                    gantt.clearAll();
-                    gantt.parse(ganttData);
-
-                    // ✨ Add today marker line
-                    const today = new Date();
-                    gantt.addMarker({
-                        start_date: today,
-                        css: "today",
-                        text: "Today"
-                    });
-
-                    console.log('Page dhtmlxGantt initialized successfully with', ganttData.data.length,
-                        'projects and today marker');
-
-                } catch (error) {
-                    console.error('Error initializing Page dhtmlxGantt:', error);
-
-                    const container = document.getElementById('gantt_here');
+                    var container = document.getElementById('gantt_here');
                     if (container) {
-                        container.innerHTML = `
-                            <div class="flex flex-col items-center justify-center h-64 text-red-500 gap-4">
-                                <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <h3 class="text-lg font-medium">Error loading timeline</h3>
-                                <p class="text-sm">Please refresh the page or contact support</p>
-                                <p class="text-xs">Error: ${error.message}</p>
-                            </div>
-                        `;
+                        container.innerHTML = '';
                     }
                 }
-            }
+
+                function initializeGanttPage() {
+                    try {
+                        if (!ganttData.data || ganttData.data.length === 0) {
+                            return;
+                        }
+
+                        var container = document.getElementById('gantt_here');
+                        if (!container) {
+                            return;
+                        }
+
+                        gantt.config.date_format = "%d-%m-%Y %H:%i";
+
+                        gantt.config.scales = [
+                            { unit: "year", step: 1, format: "%Y" },
+                            { unit: "month", step: 1, format: "%F" }
+                        ];
+
+                        gantt.config.readonly = true;
+                        gantt.config.drag_move = false;
+                        gantt.config.drag_resize = false;
+                        gantt.config.drag_progress = false;
+                        gantt.config.drag_links = false;
+
+                        gantt.config.grid_width = 350;
+                        gantt.config.row_height = 40;
+                        gantt.config.task_height = 32;
+                        gantt.config.bar_height = 24;
+
+                        gantt.config.columns = [
+                            { name: "text", label: "Project Name", width: 200, tree: true },
+                            { name: "status", label: "Status", width: 100, align: "center" },
+                            { name: "duration", label: "Duration", width: 50, align: "center" }
+                        ];
+
+                        gantt.templates.task_class = function(start, end, task) {
+                            return task.is_overdue ? "overdue" : "";
+                        };
+
+                        gantt.templates.tooltip_text = function(start, end, task) {
+                            return '<b>Project:</b> ' + task.text + '<br/>' +
+                                '<b>Status:</b> ' + task.status + '<br/>' +
+                                '<b>Duration:</b> ' + task.duration + ' day(s)<br/>' +
+                                '<b>Progress:</b> ' + Math.round(task.progress * 100) + '%<br/>' +
+                                '<b>Start:</b> ' + gantt.templates.tooltip_date_format(start) + '<br/>' +
+                                '<b>End:</b> ' + gantt.templates.tooltip_date_format(end) +
+                                (task.is_overdue ? '<br/><b style="color: #ef4444;">OVERDUE</b>' : '');
+                        };
+
+                        resetGantt();
+                        gantt.init("gantt_here");
+                        window._projectGanttReady = true;
+                        gantt.parse(ganttData);
+
+                    } catch (error) {
+                        console.error('Error initializing Page dhtmlxGantt:', error);
+                        var c = document.getElementById('gantt_here');
+                        if (c) {
+                            c.innerHTML =
+                                '<div class="flex flex-col items-center justify-center h-64 text-red-500 gap-4">' +
+                                '<h3 class="text-lg font-medium">Error loading timeline</h3>' +
+                                '<p class="text-sm">Please refresh the page</p>' +
+                                '<p class="text-xs">Error: ' + error.message + '</p></div>';
+                        }
+                    }
+                }
+
+                function waitAndInit() {
+                    if (typeof gantt !== 'undefined') {
+                        initializeGanttPage();
+                    } else {
+                        setTimeout(waitAndInit, 100);
+                    }
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', waitAndInit);
+                } else {
+                    waitAndInit();
+                }
+
+                document.addEventListener('livewire:navigated', function() {
+                    var container = document.getElementById('gantt_here');
+                    if (container) {
+                        resetGantt();
+                        setTimeout(waitAndInit, 50);
+                    }
+                });
+            })();
         </script>
     @endpush
 </x-filament-panels::page>

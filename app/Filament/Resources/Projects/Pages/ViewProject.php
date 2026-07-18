@@ -5,6 +5,10 @@ namespace App\Filament\Resources\Projects\Pages;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use App\Filament\Pages\ProjectBoard;
+use App\Models\Project;
+use App\Services\NotificationService;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
@@ -27,6 +31,68 @@ class ViewProject extends ViewRecord
                 ->icon('heroicon-o-view-columns')
                 ->color('info')
                 ->url(fn () => ProjectBoard::getUrl(['project_id' => $this->record->id])),
+            Action::make('advance_phase')
+                ->label(fn () => $this->record->next_sdlc_phase
+                    ? 'Advance to ' . (Project::SDLC_PHASES[$this->record->next_sdlc_phase] ?? '')
+                    : 'Set Phase')
+                ->icon('heroicon-o-arrow-right-circle')
+                ->color('warning')
+                ->visible(fn () => auth()->user()->can('manage_sdlc_phase')
+                    && $this->record->sdlc_phase
+                    && $this->record->next_sdlc_phase !== null)
+                ->requiresConfirmation()
+                ->modalHeading('Advance SDLC Phase')
+                ->modalDescription(fn () => "Move project from '"
+                    . (Project::SDLC_PHASES[$this->record->sdlc_phase] ?? '')
+                    . "' to '"
+                    . (Project::SDLC_PHASES[$this->record->next_sdlc_phase] ?? '') . "'?")
+                ->action(function () {
+                    $oldPhase = $this->record->sdlc_phase;
+                    $newPhase = $this->record->next_sdlc_phase;
+
+                    $this->record->update(['sdlc_phase' => $newPhase]);
+
+                    app(NotificationService::class)->notifyPhaseChanged($this->record, $oldPhase, $newPhase);
+
+                    Notification::make()
+                        ->title('Phase advanced to ' . (Project::SDLC_PHASES[$newPhase] ?? $newPhase))
+                        ->success()
+                        ->send();
+
+                    $this->redirect(static::getUrl(['record' => $this->record]));
+                }),
+            Action::make('change_phase')
+                ->label('Change Phase')
+                ->icon('heroicon-o-arrows-right-left')
+                ->color('gray')
+                ->visible(fn () => auth()->user()->can('manage_sdlc_phase')
+                    && $this->record->sdlc_phase !== null)
+                ->form([
+                    Select::make('sdlc_phase')
+                        ->label('SDLC Phase')
+                        ->options(Project::SDLC_PHASES)
+                        ->default(fn () => $this->record->sdlc_phase)
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    $oldPhase = $this->record->sdlc_phase;
+                    $newPhase = $data['sdlc_phase'];
+
+                    if ($oldPhase === $newPhase) {
+                        return;
+                    }
+
+                    $this->record->update(['sdlc_phase' => $newPhase]);
+
+                    app(NotificationService::class)->notifyPhaseChanged($this->record, $oldPhase, $newPhase);
+
+                    Notification::make()
+                        ->title('Phase changed to ' . (Project::SDLC_PHASES[$newPhase] ?? $newPhase))
+                        ->success()
+                        ->send();
+
+                    $this->redirect(static::getUrl(['record' => $this->record]));
+                }),
             Action::make('external_access')
                 ->label('External Dashboard')
                 ->icon('heroicon-o-globe-alt')
@@ -73,6 +139,12 @@ class ViewProject extends ViewRecord
                                     ->badge()
                                     ->color('primary'),
                             ]),
+                        TextEntry::make('sdlc_phase')
+                            ->label('SDLC Phase')
+                            ->badge()
+                            ->color(fn (?string $state): string => $state ? Project::getSdlcPhaseColor($state) : 'gray')
+                            ->formatStateUsing(fn (?string $state): string => $state ? (Project::SDLC_PHASES[$state] ?? $state) : 'Not set')
+                            ->placeholder('Not set'),
                         TextEntry::make('description')
                             ->label('Description')
                             ->html()

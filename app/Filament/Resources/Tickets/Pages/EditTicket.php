@@ -6,6 +6,7 @@ use Filament\Actions\ViewAction;
 use Filament\Actions\DeleteAction;
 use App\Filament\Resources\Tickets\TicketResource;
 use App\Models\Project;
+use App\Models\TicketAttachment;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
@@ -61,9 +62,21 @@ class EditTicket extends EditRecord
 
     protected function afterSave(): void
     {
-        // Sync assignees after saving (since it's a many-to-many relationship)
         if (isset($this->data['assignees']) && is_array($this->data['assignees'])) {
             $this->record->assignees()->sync($this->data['assignees']);
+        }
+
+        $files = $this->data['attachment_files'] ?? [];
+        foreach ($files as $filePath) {
+            $exists = $this->record->attachments()->where('file_path', $filePath)->exists();
+            if (!$exists) {
+                TicketAttachment::create([
+                    'ticket_id' => $this->record->id,
+                    'file_path' => $filePath,
+                    'file_name' => basename($filePath),
+                    'uploaded_by' => auth()->id(),
+                ]);
+            }
         }
     }
 

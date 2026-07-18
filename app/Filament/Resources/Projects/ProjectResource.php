@@ -25,6 +25,7 @@ use App\Filament\Resources\Projects\RelationManagers\NotesRelationManager;
 use App\Filament\Resources\Projects\Pages\ListProjects;
 use App\Filament\Resources\Projects\Pages\ViewProject;
 use App\Filament\Resources\Projects\Pages\EditProject;
+use Filament\Forms\Components\Select;
 use App\Filament\Actions\ImportTicketsAction;
 use App\Filament\Resources\ProjectResource\Pages;
 use App\Filament\Resources\ProjectResource\RelationManagers;
@@ -76,6 +77,14 @@ class ProjectResource extends Resource
                     ->native(false)
                     ->displayFormat('d/m/Y')
                     ->afterOrEqual('start_date'),
+                Select::make('sdlc_phase')
+                    ->label('SDLC Phase')
+                    ->options(Project::SDLC_PHASES)
+                    ->placeholder('No phase set')
+                    ->visible(fn () => auth()->user() && (
+                        auth()->user()->hasRole('super_admin')
+                        || auth()->user()->hasRole('cto')
+                    )),
                 Toggle::make('create_default_statuses')
                     ->label('Use Default Ticket Statuses')
                     ->helperText('Create standard Backlog, To Do, In Progress, Review, and Done statuses automatically')
@@ -119,6 +128,12 @@ class ProjectResource extends Resource
                     ->searchable(),
                 TextColumn::make('ticket_prefix')
                     ->searchable(),
+                TextColumn::make('sdlc_phase')
+                    ->label('SDLC Phase')
+                    ->badge()
+                    ->color(fn (?string $state): string => $state ? Project::getSdlcPhaseColor($state) : 'gray')
+                    ->formatStateUsing(fn (?string $state): string => $state ? (Project::SDLC_PHASES[$state] ?? $state) : 'N/A')
+                    ->sortable(),
                 TextColumn::make('progress_percentage')
                     ->label('Progress')
                     ->getStateUsing(function (Project $record): string {
@@ -217,13 +232,12 @@ class ProjectResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
+        $user = auth()->user();
 
-        $userIsSuperAdmin = auth()->user() && (
-            (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('super_admin'))
-            || (isset(auth()->user()->role) && auth()->user()->role === 'super_admin')
-        );
+        $canSeeAll = $user && method_exists($user, 'hasRole')
+            && ($user->hasRole('super_admin') || $user->hasRole('cto') || $user->hasRole('admin'));
 
-        if (!$userIsSuperAdmin) {
+        if (!$canSeeAll) {
             $query->whereHas('members', function (Builder $query) {
                 $query->where('user_id', auth()->id());
             });

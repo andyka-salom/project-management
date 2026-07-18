@@ -6,6 +6,7 @@ use Exception;
 use App\Mail\ProjectAssignmentNotification;
 use App\Models\Notification;
 use App\Models\Project;
+use App\Models\ProjectRequest;
 use App\Models\Ticket;
 use App\Models\TicketComment;
 use App\Models\User;
@@ -154,5 +155,110 @@ class NotificationService
                 'removed_by_name' => $removedBy->name,
             ],
         ]);
+    }
+
+    public function notifyAnalystAssigned(ProjectRequest $request): void
+    {
+        if (!$request->analyst_id) {
+            return;
+        }
+
+        Notification::create([
+            'user_id' => $request->analyst_id,
+            'type' => 'analyst_assigned',
+            'title' => 'Assigned as Analyst',
+            'message' => "You have been assigned to analyze request '{$request->title}'",
+            'data' => [
+                'project_request_id' => $request->id,
+                'request_title' => $request->title,
+                'assigned_by' => $request->requester->name ?? 'Unknown',
+            ],
+        ]);
+    }
+
+    public function notifyAnalysisSubmitted(ProjectRequest $request): void
+    {
+        Notification::create([
+            'user_id' => $request->requested_by,
+            'type' => 'analysis_submitted',
+            'title' => 'Analysis Submitted',
+            'message' => "Analysis for request '{$request->title}' has been submitted by {$request->analyst->name}",
+            'data' => [
+                'project_request_id' => $request->id,
+                'request_title' => $request->title,
+                'analyst_name' => $request->analyst->name ?? 'Unknown',
+            ],
+        ]);
+    }
+
+    public function notifyRecommendationSubmitted(ProjectRequest $request): void
+    {
+        $ctos = User::role('cto')->get();
+
+        foreach ($ctos as $cto) {
+            Notification::create([
+                'user_id' => $cto->id,
+                'type' => 'recommendation_submitted',
+                'title' => 'Request Recommendation Submitted',
+                'message' => "Request '{$request->title}' has been recommended for {$request->manager_recommendation} by {$request->recommender->name}",
+                'data' => [
+                    'project_request_id' => $request->id,
+                    'request_title' => $request->title,
+                    'recommendation' => $request->manager_recommendation,
+                    'recommended_by' => $request->recommender->name ?? 'Unknown',
+                ],
+            ]);
+        }
+    }
+
+    public function notifyRequestDecision(ProjectRequest $request): void
+    {
+        $usersToNotify = collect();
+
+        if ($request->requested_by) {
+            $usersToNotify->push($request->requester);
+        }
+        if ($request->analyst_id) {
+            $usersToNotify->push($request->analyst);
+        }
+
+        $decision = $request->cto_decision === 'approve' ? 'approved' : 'rejected';
+
+        foreach ($usersToNotify->unique('id') as $user) {
+            Notification::create([
+                'user_id' => $user->id,
+                'type' => "request_{$decision}",
+                'title' => 'Request ' . ucfirst($decision),
+                'message' => "Request '{$request->title}' has been {$decision} by {$request->decider->name}",
+                'data' => [
+                    'project_request_id' => $request->id,
+                    'request_title' => $request->title,
+                    'decision' => $decision,
+                    'decided_by' => $request->decider->name ?? 'Unknown',
+                    'project_id' => $request->project_id,
+                ],
+            ]);
+        }
+    }
+
+    public function notifyPhaseChanged(Project $project, string $oldPhase, string $newPhase): void
+    {
+        $members = $project->members;
+        $phaseLabels = Project::SDLC_PHASES;
+
+        foreach ($members as $member) {
+            Notification::create([
+                'user_id' => $member->id,
+                'type' => 'phase_changed',
+                'title' => 'Project Phase Changed',
+                'message' => "Project '{$project->name}' moved from {$phaseLabels[$oldPhase]} to {$phaseLabels[$newPhase]}",
+                'data' => [
+                    'project_id' => $project->id,
+                    'project_name' => $project->name,
+                    'old_phase' => $oldPhase,
+                    'new_phase' => $newPhase,
+                ],
+            ]);
+        }
     }
 }

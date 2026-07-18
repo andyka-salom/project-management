@@ -257,6 +257,62 @@ class ViewTicket extends ViewRecord
                     ->columnSpanFull()
                     ->collapsible(),
 
+                Section::make('Attachments')
+                    ->icon('heroicon-o-paper-clip')
+                    ->schema([
+                        TextEntry::make('attachments_list')
+                            ->hiddenLabel()
+                            ->getStateUsing(function (Ticket $record) {
+                                $attachments = $record->attachments;
+                                if ($attachments->isEmpty()) {
+                                    return new HtmlString('<p class="text-sm text-gray-500">No attachments</p>');
+                                }
+
+                                $html = '<ul class="space-y-1">';
+                                foreach ($attachments as $attachment) {
+                                    $url = asset('storage/' . $attachment->file_path);
+                                    $name = e($attachment->file_name);
+                                    $html .= "<li><a href=\"{$url}\" target=\"_blank\" class=\"text-primary-600 hover:underline\">📎 {$name}</a></li>";
+                                }
+                                $html .= '</ul>';
+
+                                return new HtmlString($html);
+                            })
+                            ->html()
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible()
+                    ->collapsed()
+                    ->visible(fn (Ticket $record) => $record->attachments()->exists()),
+
+                Section::make('Links')
+                    ->icon('heroicon-o-link')
+                    ->schema([
+                        TextEntry::make('links_list')
+                            ->hiddenLabel()
+                            ->getStateUsing(function (Ticket $record) {
+                                $links = $record->links;
+                                if ($links->isEmpty()) {
+                                    return new HtmlString('<p class="text-sm text-gray-500">No links</p>');
+                                }
+
+                                $html = '<ul class="space-y-1">';
+                                foreach ($links as $link) {
+                                    $url = e($link->url);
+                                    $title = e($link->title);
+                                    $html .= "<li><a href=\"{$url}\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary-600 hover:underline\">🔗 {$title}</a></li>";
+                                }
+                                $html .= '</ul>';
+
+                                return new HtmlString($html);
+                            })
+                            ->html()
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible()
+                    ->collapsed()
+                    ->visible(fn (Ticket $record) => $record->links()->exists()),
+
                 Grid::make(['default' => 1, 'lg' => 2])
                     ->schema([
                         Section::make('Metadata')

@@ -19,6 +19,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Select;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\RichEditor;
@@ -187,6 +190,47 @@ class TicketResource extends Resource
                     ->relationship('creator', 'name')
                     ->disabled()
                     ->hiddenOn(['create', 'ticket_on_board']),
+
+                Section::make('Attachments')
+                    ->schema([
+                        FileUpload::make('attachment_files')
+                            ->label('Files')
+                            ->multiple()
+                            ->directory('ticket-attachments')
+                            ->disk('public')
+                            ->preserveFilenames()
+                            ->maxSize(10240)
+                            ->dehydrated(false)
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible()
+                    ->collapsed(),
+
+                Section::make('Links')
+                    ->schema([
+                        Repeater::make('ticket_links')
+                            ->label('')
+                            ->relationship('links')
+                            ->schema([
+                                TextInput::make('title')
+                                    ->required()
+                                    ->maxLength(255),
+                                TextInput::make('url')
+                                    ->required()
+                                    ->url()
+                                    ->maxLength(2048),
+                            ])
+                            ->columns(2)
+                            ->defaultItems(0)
+                            ->addActionLabel('Add Link')
+                            ->columnSpanFull()
+                            ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
+                                $data['added_by'] = auth()->id();
+                                return $data;
+                            }),
+                    ])
+                    ->collapsible()
+                    ->collapsed(),
             ]);
     }
 

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Tickets\Pages;
 
 use App\Filament\Resources\Tickets\TicketResource;
 use App\Models\Project;
+use App\Models\TicketAttachment;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
@@ -106,6 +107,20 @@ class CreateTicket extends CreateRecord
         }
 
         return $ticket;
+    }
+
+    protected function afterCreate(): void
+    {
+        $files = $this->data['attachment_files'] ?? [];
+
+        foreach ($files as $filePath) {
+            TicketAttachment::create([
+                'ticket_id' => $this->record->id,
+                'file_path' => $filePath,
+                'file_name' => basename($filePath),
+                'uploaded_by' => auth()->id(),
+            ]);
+        }
     }
 
     protected function getRedirectUrl(): string

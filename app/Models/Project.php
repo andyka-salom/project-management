@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -13,6 +14,28 @@ class Project extends Model
 {
     use HasFactory;
 
+    public const SDLC_PHASES = [
+        'planning' => 'Planning',
+        'requirements_analysis' => 'Requirements Analysis',
+        'system_design' => 'System Design',
+        'implementation' => 'Implementation',
+        'testing' => 'Testing',
+        'deployment' => 'Deployment',
+        'maintenance' => 'Maintenance',
+        'completed' => 'Completed',
+    ];
+
+    public const SDLC_PHASE_ORDER = [
+        'planning',
+        'requirements_analysis',
+        'system_design',
+        'implementation',
+        'testing',
+        'deployment',
+        'maintenance',
+        'completed',
+    ];
+
     protected $fillable = [
         'name',
         'description',
@@ -21,6 +44,8 @@ class Project extends Model
         'start_date',
         'end_date',
         'pinned_date',
+        'sdlc_phase',
+        'project_request_id',
     ];
 
     protected $casts = [
@@ -109,6 +134,40 @@ class Project extends Model
         return round(($completedTickets / $totalTickets) * 100, 1);
     }
     
+    public function projectRequest(): BelongsTo
+    {
+        return $this->belongsTo(ProjectRequest::class);
+    }
+
+    public function getNextSdlcPhaseAttribute(): ?string
+    {
+        if (!$this->sdlc_phase) {
+            return null;
+        }
+
+        $currentIndex = array_search($this->sdlc_phase, self::SDLC_PHASE_ORDER);
+        if ($currentIndex === false || $currentIndex >= count(self::SDLC_PHASE_ORDER) - 1) {
+            return null;
+        }
+
+        return self::SDLC_PHASE_ORDER[$currentIndex + 1];
+    }
+
+    public static function getSdlcPhaseColor(string $phase): string
+    {
+        return match ($phase) {
+            'planning' => 'gray',
+            'requirements_analysis' => 'info',
+            'system_design' => 'purple',
+            'implementation' => 'warning',
+            'testing' => 'orange',
+            'deployment' => 'success',
+            'maintenance' => 'primary',
+            'completed' => 'success',
+            default => 'gray',
+        };
+    }
+
     public function externalAccess(): HasOne
     {
         return $this->hasOne(ExternalAccess::class);

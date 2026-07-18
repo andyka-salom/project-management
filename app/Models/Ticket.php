@@ -89,6 +89,16 @@ class Ticket extends Model
         return $this->hasMany(TicketComment::class)->orderBy('created_at', 'asc');
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TicketAttachment::class);
+    }
+
+    public function links(): HasMany
+    {
+        return $this->hasMany(TicketLink::class);
+    }
+
     public function epic(): BelongsTo
     {
         return $this->belongsTo(Epic::class);
