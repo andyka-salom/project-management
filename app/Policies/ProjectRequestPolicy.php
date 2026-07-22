@@ -6,11 +6,29 @@ namespace App\Policies;
 
 use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\ProjectRequest;
+use App\Support\DivisionAccess;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProjectRequestPolicy
 {
     use HandlesAuthorization;
+
+    /**
+     * The division wall: a user may only act on a request inside a division they
+     * belong to (global operators and unassigned/legacy requests are exempt).
+     */
+    protected function withinDivision(AuthUser $authUser, ProjectRequest $projectRequest): bool
+    {
+        if (DivisionAccess::hasGlobalAccess($authUser)) {
+            return true;
+        }
+
+        if (is_null($projectRequest->division_id)) {
+            return true;
+        }
+
+        return in_array($projectRequest->division_id, $authUser->divisionIds(), true);
+    }
 
     public function viewAny(AuthUser $authUser): bool
     {
@@ -19,7 +37,7 @@ class ProjectRequestPolicy
 
     public function view(AuthUser $authUser, ProjectRequest $projectRequest): bool
     {
-        return $authUser->can('view_project_request');
+        return $authUser->can('view_project_request') && $this->withinDivision($authUser, $projectRequest);
     }
 
     public function create(AuthUser $authUser): bool
@@ -29,12 +47,12 @@ class ProjectRequestPolicy
 
     public function update(AuthUser $authUser, ProjectRequest $projectRequest): bool
     {
-        return $authUser->can('update_project_request');
+        return $authUser->can('update_project_request') && $this->withinDivision($authUser, $projectRequest);
     }
 
     public function delete(AuthUser $authUser, ProjectRequest $projectRequest): bool
     {
-        return $authUser->can('delete_project_request');
+        return $authUser->can('delete_project_request') && $this->withinDivision($authUser, $projectRequest);
     }
 
     public function restore(AuthUser $authUser, ProjectRequest $projectRequest): bool

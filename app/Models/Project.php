@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use App\Models\Scopes\DivisionScope;
 use Carbon\Carbon;
 
+#[ScopedBy([DivisionScope::class])]
 class Project extends Model
 {
     use HasFactory;
@@ -37,6 +40,7 @@ class Project extends Model
     ];
 
     protected $fillable = [
+        'division_id',
         'name',
         'description',
         'ticket_prefix',
@@ -67,6 +71,11 @@ class Project extends Model
     public function unpin(): void
     {
         $this->update(['pinned_date' => null]);
+    }
+
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
     }
 
     public function ticketStatuses(): HasMany

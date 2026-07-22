@@ -22,6 +22,7 @@ class CtoSeeder extends Seeder
             'view_project_request', 'view_any_project_request', 'update_project_request',
             'approve_project_request',
             'manage_sdlc_phase',
+            'view_issue', 'view_any_issue', 'decide_issue',
         ])->get();
 
         $cto->syncPermissions($ctoPermissions);

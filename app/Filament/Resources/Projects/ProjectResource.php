@@ -30,6 +30,8 @@ use App\Filament\Actions\ImportTicketsAction;
 use App\Filament\Resources\ProjectResource\Pages;
 use App\Filament\Resources\ProjectResource\RelationManagers;
 use App\Models\Project;
+use App\Models\Division;
+use App\Support\DivisionAccess;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -45,7 +47,7 @@ class ProjectResource extends Resource
     protected static ?string $model = Project::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static string|\UnitEnum|null $navigationGroup = 'Project Management';
+    protected static string|\UnitEnum|null $navigationGroup = 'Work';
     protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
@@ -55,6 +57,28 @@ class ProjectResource extends Resource
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+                Select::make('division_id')
+                    ->label('Division')
+                    ->options(function () {
+                        $user = auth()->user();
+                        $query = Division::query()->where('is_active', true);
+                        if (!DivisionAccess::hasGlobalAccess($user)) {
+                            $query->whereIn('id', $user->divisionIds());
+                        }
+                        return $query->orderBy('name')->pluck('name', 'id');
+                    })
+                    ->default(function () {
+                        $user = auth()->user();
+                        if (DivisionAccess::hasGlobalAccess($user)) {
+                            return null;
+                        }
+                        $ids = $user->divisionIds();
+                        return count($ids) === 1 ? $ids[0] : null;
+                    })
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->helperText('The division that owns this project. Only its members can see it.'),
                 RichEditor::make('description')
                     ->columnSpanFull()
                     ->fileAttachmentsDisk('public')
@@ -78,7 +102,7 @@ class ProjectResource extends Resource
                     ->displayFormat('d/m/Y')
                     ->afterOrEqual('start_date'),
                 Select::make('sdlc_phase')
-                    ->label('SDLC Phase')
+                    ->label('Project Stage')
                     ->options(Project::SDLC_PHASES)
                     ->placeholder('No phase set')
                     ->visible(fn () => auth()->user() && (
@@ -126,10 +150,17 @@ class ProjectResource extends Resource
                     ->default('#6B7280'),
                 TextColumn::make('name')
                     ->searchable(),
+                TextColumn::make('division.name')
+                    ->label('Division')
+                    ->badge()
+                    ->color('gray')
+                    ->placeholder('—')
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('ticket_prefix')
                     ->searchable(),
                 TextColumn::make('sdlc_phase')
-                    ->label('SDLC Phase')
+                    ->label('Project Stage')
                     ->badge()
                     ->color(fn (?string $state): string => $state ? Project::getSdlcPhaseColor($state) : 'gray')
                     ->formatStateUsing(fn (?string $state): string => $state ? (Project::SDLC_PHASES[$state] ?? $state) : 'N/A')
@@ -231,17 +262,27 @@ class ProjectResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
+        // Division wall enforced by DivisionScope on the model. Within accessible
+        // divisions, leads (chief/manager) see every project of their divisions;
+        // others see only projects they are a member of.
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        $canSeeAll = $user && method_exists($user, 'hasRole')
-            && ($user->hasRole('super_admin') || $user->hasRole('cto') || $user->hasRole('admin'));
+        if (DivisionAccess::hasGlobalAccess($user)) {
+            return $query;
+        }
 
-        if (!$canSeeAll) {
+        $ledDivisionIds = $user->ledDivisionIds();
+
+        $query->where(function (Builder $query) use ($ledDivisionIds) {
             $query->whereHas('members', function (Builder $query) {
                 $query->where('user_id', auth()->id());
             });
-        }
+
+            if (!empty($ledDivisionIds)) {
+                $query->orWhereIn('projects.division_id', $ledDivisionIds);
+            }
+        });
 
         return $query;
     }

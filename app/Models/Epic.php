@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use App\Models\Scopes\ProjectDivisionScope;
 
+#[ScopedBy([ProjectDivisionScope::class])]
 class Epic extends Model
 {
     use HasFactory;

@@ -59,6 +59,54 @@ class User extends Authenticatable implements FilamentUser
             ->withTimestamps();
     }
 
+    public function divisions(): BelongsToMany
+    {
+        return $this->belongsToMany(Division::class, 'division_user')
+            ->withPivot('position')
+            ->withTimestamps();
+    }
+
+    /**
+     * IDs of every division this user belongs to (any position).
+     *
+     * @return array<int, int>
+     */
+    public function divisionIds(): array
+    {
+        return $this->divisions()->pluck('divisions.id')->all();
+    }
+
+    /**
+     * IDs of divisions where this user is a chief or manager — i.e. can see
+     * ALL of that division's data, not just projects they are a member of.
+     *
+     * @return array<int, int>
+     */
+    public function ledDivisionIds(): array
+    {
+        return $this->divisions()
+            ->wherePivotIn('position', ['chief', 'manager'])
+            ->pluck('divisions.id')
+            ->all();
+    }
+
+    public function isChiefOf(Division|int $division): bool
+    {
+        $divisionId = $division instanceof Division ? $division->id : $division;
+
+        return $this->divisions()
+            ->wherePivot('position', 'chief')
+            ->where('divisions.id', $divisionId)
+            ->exists();
+    }
+
+    public function leadsAnyDivision(): bool
+    {
+        return $this->divisions()
+            ->wherePivotIn('position', ['chief', 'manager'])
+            ->exists();
+    }
+
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);

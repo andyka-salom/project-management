@@ -57,9 +57,17 @@ class UserResource extends Resource
                     ->maxLength(255),
                 Select::make('roles')
                     ->relationship('roles', 'name')
+                    ->getOptionLabelFromRecordUsing(fn ($record): string => config('roles.labels')[$record->name] ?? str($record->name)->headline())
                     ->multiple()
                     ->preload()
                     ->searchable(),
+                Select::make('divisions')
+                    ->label('Divisions')
+                    ->relationship('divisions', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->searchable()
+                    ->helperText('Which divisions this person belongs to. New members join as Staff — set Chief/Manager from the division\'s People tab.'),
             ]);
     }
 
@@ -81,6 +89,14 @@ class UserResource extends Resource
                     ->separator(',')
                     ->tooltip(fn (User $record): string => $record->roles->pluck('name')->join(', ') ?: 'No Roles')
                     ->sortable(),
+
+                TextColumn::make('divisions.name')
+                    ->label('Divisions')
+                    ->badge()
+                    ->color('gray')
+                    ->separator(',')
+                    ->placeholder('—')
+                    ->toggleable(),
 
                 TextColumn::make('projects_count')
                     ->label('Projects')

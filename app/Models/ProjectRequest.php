@@ -5,10 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use App\Models\Scopes\DivisionScope;
 
+#[ScopedBy([DivisionScope::class])]
 class ProjectRequest extends Model
 {
     protected $fillable = [
+        'division_id',
         'title',
         'description',
         'business_justification',
@@ -119,6 +123,11 @@ class ProjectRequest extends Model
                 ]);
             }
         });
+    }
+
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
     }
 
     public function requester(): BelongsTo

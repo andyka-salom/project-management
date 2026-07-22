@@ -12,7 +12,7 @@ class ProjectTimeline extends Page
     protected string $view = 'filament.pages.project-timeline';
     protected static ?string $navigationLabel = 'Project Timeline';
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calendar-days';
-    protected static string | \UnitEnum | null $navigationGroup = 'Project Management';
+    protected static string | \UnitEnum | null $navigationGroup = 'Work';
     protected static ?int $navigationSort = 3;
     protected static ?string $slug = 'project-timeline';
     

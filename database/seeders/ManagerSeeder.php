@@ -23,6 +23,7 @@ class ManagerSeeder extends Seeder
             'create_project_request', 'update_project_request',
             'assign_analyst_project_request',
             'recommend_project_request',
+            'view_issue', 'view_any_issue', 'create_issue', 'update_issue', 'delete_issue', 'verify_issue',
         ])->get();
 
         $manager->syncPermissions($managerPermissions);

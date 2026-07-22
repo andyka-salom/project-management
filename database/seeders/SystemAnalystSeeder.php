@@ -20,6 +20,7 @@ class SystemAnalystSeeder extends Seeder
             'view_notification', 'view_any_notification',
             'view_project_request', 'view_any_project_request', 'update_project_request',
             'submit_analysis_project_request',
+            'view_issue', 'view_any_issue', 'act_issue',
         ])->get();
 
         $systemAnalyst->syncPermissions($saPermissions);

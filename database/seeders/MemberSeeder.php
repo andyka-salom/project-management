@@ -36,6 +36,11 @@ class MemberSeeder extends Seeder
             // Notification
             'view_notification',
             'view_any_notification',
+
+            // Issue (view & act as PIC)
+            'view_issue',
+            'view_any_issue',
+            'act_issue',
         ])->get();
 
         $member->syncPermissions($memberPermissions);

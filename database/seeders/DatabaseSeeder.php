@@ -54,5 +54,8 @@ class DatabaseSeeder extends Seeder
 
         // 4. Demo data
         $this->call(DemoDataSeeder::class);
+
+        // 5. Divisions — create org structure and assign existing users/projects/requests
+        $this->call(DivisionSeeder::class);
     }
 }

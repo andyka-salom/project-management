@@ -30,9 +30,11 @@ class TicketPriorityResource extends Resource
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-flag';
 
-    protected static ?string $navigationLabel = 'Ticket Priorities';
+    protected static ?string $navigationLabel = 'Task Priorities';
 
-    protected static ?string $pluralLabel = 'Ticket Priorities';
+    protected static ?string $pluralLabel = 'Task Priorities';
+
+    protected static ?string $modelLabel = 'Task Priority';
 
     protected static string | \UnitEnum | null $navigationGroup = 'Settings';
 

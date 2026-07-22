@@ -9,6 +9,7 @@ use App\Filament\Resources\ProjectRequests\Pages\ViewProjectRequest;
 use App\Filament\Resources\ProjectRequests\RelationManagers\HistoriesRelationManager;
 use App\Models\ProjectRequest;
 use App\Models\User;
+use App\Support\DivisionAccess;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Actions\BulkActionGroup;
@@ -31,9 +32,11 @@ class ProjectRequestResource extends Resource
     protected static ?string $model = ProjectRequest::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-plus';
-    protected static string|\UnitEnum|null $navigationGroup = 'SDLC';
+    protected static string|\UnitEnum|null $navigationGroup = 'Requests';
     protected static ?int $navigationSort = 0;
-    protected static ?string $navigationLabel = 'Project Requests';
+    protected static ?string $navigationLabel = 'Requests';
+    protected static ?string $modelLabel = 'Request';
+    protected static ?string $pluralModelLabel = 'Requests';
 
     public static function form(Schema $schema): Schema
     {
@@ -44,6 +47,27 @@ class ProjectRequestResource extends Resource
                         TextInput::make('title')
                             ->required()
                             ->maxLength(255),
+                        Select::make('division_id')
+                            ->label('Division')
+                            ->options(function () {
+                                $user = auth()->user();
+                                $query = \App\Models\Division::query()->where('is_active', true);
+                                if (!DivisionAccess::hasGlobalAccess($user)) {
+                                    $query->whereIn('id', $user->divisionIds());
+                                }
+                                return $query->orderBy('name')->pluck('name', 'id');
+                            })
+                            ->default(function () {
+                                $user = auth()->user();
+                                if (DivisionAccess::hasGlobalAccess($user)) {
+                                    return null;
+                                }
+                                $ids = $user->divisionIds();
+                                return count($ids) === 1 ? $ids[0] : null;
+                            })
+                            ->required()
+                            ->searchable()
+                            ->preload(),
                         Select::make('priority')
                             ->options(ProjectRequest::getPriorities())
                             ->default('medium')
@@ -204,22 +228,21 @@ class ProjectRequestResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
-        $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super_admin');
-        $isCto = method_exists($user, 'hasRole') && $user->hasRole('cto');
-
-        if ($isSuperAdmin || $isCto) {
+        // Division wall enforced by DivisionScope on the model. Global operators
+        // see all; division leads see every request in their divisions; everyone
+        // else sees requests they raised or were assigned to analyse.
+        if (DivisionAccess::hasGlobalAccess($user)) {
             return $query;
         }
 
-        $isManager = method_exists($user, 'hasRole') && $user->hasRole('manager');
-        $isAnalyst = method_exists($user, 'hasRole') && $user->hasRole('system_analyst');
+        $ledDivisionIds = $user->ledDivisionIds();
 
-        return $query->where(function (Builder $q) use ($user, $isManager, $isAnalyst) {
-            if ($isManager) {
-                $q->orWhere('requested_by', $user->id);
-            }
-            if ($isAnalyst) {
-                $q->orWhere('analyst_id', $user->id);
+        return $query->where(function (Builder $q) use ($user, $ledDivisionIds) {
+            $q->where('requested_by', $user->id)
+                ->orWhere('analyst_id', $user->id);
+
+            if (!empty($ledDivisionIds)) {
+                $q->orWhereIn('project_requests.division_id', $ledDivisionIds);
             }
         });
     }

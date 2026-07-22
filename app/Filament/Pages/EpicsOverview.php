@@ -13,9 +13,9 @@ class EpicsOverview extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-flag';
     protected string $view = 'filament.pages.epics-overview';
-    protected static string|\UnitEnum|null $navigationGroup = 'Project Management';
-    protected static ?string $navigationLabel = 'Epics';
-    protected static ?string $title = 'Epics Overview';
+    protected static string|\UnitEnum|null $navigationGroup = 'Work';
+    protected static ?string $navigationLabel = 'Initiatives';
+    protected static ?string $title = 'Initiatives Overview';
     protected static ?int $navigationSort = 7;
 
     public function getSubheading(): ?string

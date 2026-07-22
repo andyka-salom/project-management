@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use App\Models\Scopes\ProjectDivisionScope;
 use Illuminate\Support\Str;
 
+#[ScopedBy([ProjectDivisionScope::class])]
 class Ticket extends Model
 {
     use HasFactory;

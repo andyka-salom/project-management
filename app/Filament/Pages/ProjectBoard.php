@@ -29,7 +29,7 @@ class ProjectBoard extends Page
 
     protected static ?string $navigationLabel = 'Project Board';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Project Management';
+    protected static string|\UnitEnum|null $navigationGroup = 'Work';
 
     protected static ?int $navigationSort = 4;
 

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Tickets;
 use App\Models\Epic;
 use App\Models\Ticket;
 use App\Models\Project;
+use App\Support\DivisionAccess;
 use Filament\Tables\Table;
 use App\Models\TicketStatus;
 use Filament\Actions\Action;
@@ -39,27 +40,46 @@ class TicketResource extends Resource
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-ticket';
 
-    protected static ?string $navigationLabel = 'Tickets';
+    protected static ?string $navigationLabel = 'Tasks';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Project Management';
+    protected static ?string $modelLabel = 'Task';
+
+    protected static ?string $pluralModelLabel = 'Tasks';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Work';
 
     protected static ?int $navigationSort = 5;
 
     public static function getEloquentQuery(): Builder
     {
+        // The division wall is enforced by ProjectDivisionScope on the model.
+        // Here we only narrow WITHIN accessible divisions: leads (chief/manager)
+        // see all tasks in their divisions' projects; everyone else sees only
+        // tasks they are assigned to, created, or are project members of.
         $query = parent::getEloquentQuery();
+        $user = auth()->user();
 
-        if (!auth()->user()->hasRole(['super_admin'])) {
-            $query->where(function ($query) {
-                $query->whereHas('assignees', function ($query) {
-                    $query->where('users.id', auth()->id());
-                })
-                    ->orWhere('created_by', auth()->id())
-                    ->orWhereHas('project.members', function ($query) {
-                        $query->where('users.id', auth()->id());
-                    });
-            });
+        if (DivisionAccess::hasGlobalAccess($user)) {
+            return $query;
         }
+
+        $ledDivisionIds = $user->ledDivisionIds();
+
+        $query->where(function ($query) use ($ledDivisionIds) {
+            $query->whereHas('assignees', function ($query) {
+                $query->where('users.id', auth()->id());
+            })
+                ->orWhere('created_by', auth()->id())
+                ->orWhereHas('project.members', function ($query) {
+                    $query->where('users.id', auth()->id());
+                });
+
+            if (!empty($ledDivisionIds)) {
+                $query->orWhereHas('project', function ($query) use ($ledDivisionIds) {
+                    $query->whereIn('division_id', $ledDivisionIds);
+                });
+            }
+        });
 
         return $query;
     }

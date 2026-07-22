@@ -18,6 +18,7 @@ class QaSeeder extends Seeder
             'view_ticket_priority', 'view_any_ticket_priority',
             'view_ticket_comment', 'view_any_ticket_comment', 'create_ticket_comment',
             'view_notification', 'view_any_notification',
+            'view_issue', 'view_any_issue', 'act_issue',
         ])->get();
 
         $qa->syncPermissions($qaPermissions);
