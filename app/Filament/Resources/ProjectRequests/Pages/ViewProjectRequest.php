@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -219,6 +220,22 @@ class ViewProjectRequest extends ViewRecord
                             ->html()
                             ->columnSpanFull(),
                     ]),
+
+                Section::make('Attachments')
+                    ->schema([
+                        RepeatableEntry::make('attachments')
+                            ->hiddenLabel()
+                            ->schema([
+                                TextEntry::make('file_name')
+                                    ->hiddenLabel()
+                                    ->icon('heroicon-o-paper-clip')
+                                    ->url(fn ($record) => \Illuminate\Support\Facades\Storage::disk('public')->url($record->file_path))
+                                    ->openUrlInNewTab()
+                                    ->color('primary'),
+                            ])
+                            ->columns(1),
+                    ])
+                    ->visible(fn ($record) => $record->attachments()->exists()),
 
                 Section::make('Analyst Assignment')
                     ->schema([
