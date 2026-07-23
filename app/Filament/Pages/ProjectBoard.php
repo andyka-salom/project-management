@@ -350,6 +350,22 @@ class ProjectBoard extends Page
 
                     $schema->model($record)->saveRelationships();
 
+                    // Persist uploaded attachments. The FileUpload is dehydrated(false)
+                    // so its final paths are not in $data — read them from raw state.
+                    $files = $schema->getRawState()['attachment_files'] ?? [];
+                    foreach ($files as $filePath) {
+                        if (! is_string($filePath)) {
+                            continue;
+                        }
+
+                        \App\Models\TicketAttachment::create([
+                            'ticket_id' => $record->id,
+                            'file_path' => $filePath,
+                            'file_name' => basename($filePath),
+                            'uploaded_by' => auth()->id(),
+                        ]);
+                    }
+
                     Notification::make()
                         ->title('Ticket Created')
                         ->body('The ticket has been created successfully.')

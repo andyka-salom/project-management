@@ -95,6 +95,7 @@ class ProjectRequestService
             }
 
             $project = Project::create([
+                'division_id' => $request->division_id,
                 'name' => $request->title,
                 'description' => $request->description,
                 'ticket_prefix' => $prefix,
