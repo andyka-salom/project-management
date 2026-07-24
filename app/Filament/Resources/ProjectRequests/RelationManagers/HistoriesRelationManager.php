@@ -53,7 +53,13 @@ class HistoriesRelationManager extends RelationManager
                     ->badge()
                     ->color(fn (string $state): string => ProjectRequest::getStatusColor($state)),
                 TextColumn::make('notes')
-                    ->limit(80)
+                    ->formatStateUsing(fn (?string $state): string => $state
+                        ? trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($state))))
+                        : '-')
+                    ->limit(120)
+                    ->tooltip(fn (?string $state): ?string => $state
+                        ? trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags($state))))
+                        : null)
                     ->wrap(),
                 TextColumn::make('created_at')
                     ->label('Date')

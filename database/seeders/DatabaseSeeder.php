@@ -53,7 +53,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('All test users password: password');
 
         // 4. Demo data
-        $this->call(DemoDataSeeder::class);
+        // $this->call(DemoDataSeeder::class);
 
         // 5. Divisions — create org structure and assign existing users/projects/requests
         $this->call(DivisionSeeder::class);

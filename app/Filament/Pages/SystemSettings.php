@@ -25,6 +25,7 @@ class SystemSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Cog6Tooth;
     protected static string | UnitEnum | null $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 99;
     protected static ?string $title = 'UI Settings';
     protected string $view = 'filament.pages.system-settings';
 
