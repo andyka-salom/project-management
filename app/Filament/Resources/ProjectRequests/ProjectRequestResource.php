@@ -68,6 +68,13 @@ class ProjectRequestResource extends Resource
                             ->required()
                             ->searchable()
                             ->preload(),
+                        Select::make('requested_by')
+                            ->label('Requested By (Owner)')
+                            ->helperText('Reassign this request to another user. Combined with the Division above, the new owner becomes the creator and can edit it.')
+                            ->options(fn () => User::orderBy('name')->pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->visible(fn () => DivisionAccess::hasGlobalAccess(auth()->user())),
                         Select::make('priority')
                             ->options(ProjectRequest::getPriorities())
                             ->default('medium')

@@ -4,6 +4,8 @@ namespace App\Providers\Filament;
 
 use Filament\Pages\Dashboard;
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Auth\Register;
+use App\Filament\Pages\Auth\EmailVerification;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -32,7 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
-            ->registration()
+            ->registration(Register::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
@@ -69,7 +71,7 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->passwordReset()
-            ->emailVerification()
+            ->emailVerification(EmailVerification::class)
             ->profile()
             ->viteTheme('resources/css/filament/admin/theme.css');
 

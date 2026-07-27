@@ -6,14 +6,17 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, HasName
+class User extends Authenticatable implements FilamentUser, HasName, MustVerifyEmail
 {
     public function getFilamentName(): string
     {
@@ -21,7 +24,7 @@ class User extends Authenticatable implements FilamentUser, HasName
     }
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable;
+    use HasFactory, HasRoles, MustVerifyEmailTrait, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -44,6 +47,7 @@ class User extends Authenticatable implements FilamentUser, HasName
     protected $hidden = [
         'password',
         'remember_token',
+        'email_otp',
     ];
 
     /**
@@ -56,7 +60,55 @@ class User extends Authenticatable implements FilamentUser, HasName
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'email_otp_expires_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Generate a fresh 6-digit email verification OTP, store it hashed with an
+     * expiry, and return the plaintext code so it can be emailed to the user.
+     */
+    public function generateEmailOtp(int $ttlMinutes = 10): string
+    {
+        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $this->forceFill([
+            'email_otp' => Hash::make($otp),
+            'email_otp_expires_at' => now()->addMinutes($ttlMinutes),
+        ])->save();
+
+        return $otp;
+    }
+
+    /**
+     * True when the given code matches the stored OTP and has not expired.
+     */
+    public function verifyEmailOtp(string $otp): bool
+    {
+        if (empty($this->email_otp) || empty($this->email_otp_expires_at)) {
+            return false;
+        }
+
+        if (now()->greaterThan($this->email_otp_expires_at)) {
+            return false;
+        }
+
+        return Hash::check($otp, $this->email_otp);
+    }
+
+    public function hasPendingEmailOtp(): bool
+    {
+        return ! empty($this->email_otp)
+            && ! empty($this->email_otp_expires_at)
+            && now()->lessThanOrEqualTo($this->email_otp_expires_at);
+    }
+
+    public function clearEmailOtp(): void
+    {
+        $this->forceFill([
+            'email_otp' => null,
+            'email_otp_expires_at' => null,
+        ])->save();
     }
 
     public function projects(): BelongsToMany
