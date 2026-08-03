@@ -37,7 +37,7 @@ class ViewProject extends ViewRecord
                     : 'Set Phase')
                 ->icon('heroicon-o-arrow-right-circle')
                 ->color('warning')
-                ->visible(fn () => auth()->user()->can('manage_sdlc_phase')
+                ->visible(fn () => (auth()->user()->can('manage_sdlc_phase') || auth()->user()->hasRole('manager'))
                     && $this->record->sdlc_phase
                     && $this->record->next_sdlc_phase !== null)
                 ->requiresConfirmation()
@@ -65,7 +65,7 @@ class ViewProject extends ViewRecord
                 ->label('Change Phase')
                 ->icon('heroicon-o-arrows-right-left')
                 ->color('gray')
-                ->visible(fn () => auth()->user()->can('manage_sdlc_phase')
+                ->visible(fn () => (auth()->user()->can('manage_sdlc_phase') || auth()->user()->hasRole('manager'))
                     && $this->record->sdlc_phase !== null)
                 ->form([
                     Select::make('sdlc_phase')

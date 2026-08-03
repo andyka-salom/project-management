@@ -73,6 +73,9 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->emailVerification(EmailVerification::class)
             ->profile()
+            ->userMenuItems([
+                'profile' => \Filament\Navigation\MenuItem::make()->label(fn() => auth()->user()->name),
+            ])
             ->viteTheme('resources/css/filament/admin/theme.css');
 
         return $panel;

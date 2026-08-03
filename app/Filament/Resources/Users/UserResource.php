@@ -33,6 +33,11 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'Users';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->hasRole(['super_admin', 'admin']);
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
