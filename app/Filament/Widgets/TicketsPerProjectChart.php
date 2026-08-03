@@ -5,12 +5,10 @@ namespace App\Filament\Widgets;
 use App\Models\Project;
 use App\Models\Ticket;
 use Filament\Widgets\ChartWidget;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Illuminate\Support\Facades\DB;
 
 class TicketsPerProjectChart extends ChartWidget
 {
-    use HasWidgetShield;
     
     protected ?string $heading = 'Number of tickets per project';
     

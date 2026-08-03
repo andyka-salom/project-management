@@ -4,11 +4,9 @@ namespace App\Filament\Widgets;
 
 use App\Models\User;
 use Filament\Widgets\ChartWidget;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class UserStatisticsChart extends ChartWidget
 {
-    use HasWidgetShield;
     
     protected ?string $heading = 'User Statistics Chart';
     

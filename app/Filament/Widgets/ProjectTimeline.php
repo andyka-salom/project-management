@@ -7,11 +7,9 @@ use App\Models\Ticket;
 use Filament\Widgets\Widget;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class ProjectTimeline extends Widget
 {
-    use HasWidgetShield;
     protected ?string $heading = 'Project Timeline';
     
     protected string $view = 'filament.widgets.project-timeline';

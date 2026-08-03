@@ -4,13 +4,11 @@ namespace App\Filament\Widgets;
 
 use App\Models\Ticket;
 use Filament\Widgets\ChartWidget;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class MonthlyTicketTrendChart extends ChartWidget
 {
-    use HasWidgetShield;
 
     protected ?string $heading = 'Monthly Ticket Creation Trend';
 

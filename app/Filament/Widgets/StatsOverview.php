@@ -5,7 +5,6 @@ namespace App\Filament\Widgets;
 use App\Models\Project;
 use App\Models\Ticket;
 use App\Models\User;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -13,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class StatsOverview extends BaseWidget
 {
-    use HasWidgetShield;
 
     protected ?string $pollingInterval = '30s';
 
