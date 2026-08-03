@@ -12,9 +12,15 @@ use App\Models\Issue;
 use App\Models\User;
 use App\Support\DivisionAccess;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -147,6 +153,7 @@ class IssueResource extends Resource
                     ->options(Issue::getStatuses()),
                 SelectFilter::make('level')
                     ->options(Issue::getLevels()),
+                TrashedFilter::make(),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -156,10 +163,15 @@ class IssueResource extends Resource
                         Issue::STATUS_CTO_QUEUE,
                         Issue::STATUS_IN_PROGRESS,
                     ])),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
+                    ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }

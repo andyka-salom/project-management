@@ -15,8 +15,14 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Actions\ViewAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreBulkAction;
+use Filament\Tables\Filters\TrashedFilter;
 use App\Filament\Resources\Projects\RelationManagers\TicketStatusesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\EpicsRelationManager;
@@ -227,13 +233,21 @@ class ProjectResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->filters([
+                TrashedFilter::make(),
+            ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make()
+                EditAction::make(),
+                DeleteAction::make(),
+                RestoreAction::make(),
+                ForceDeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
+                    ForceDeleteBulkAction::make(),
                 ]),
             ]);
     }

@@ -55,6 +55,16 @@ class IssuePolicy
         return $authUser->can('delete_issue') && $this->withinDivision($authUser, $issue);
     }
 
+    public function restore(AuthUser $authUser, Issue $issue): bool
+    {
+        return $authUser->can('restore_issue');
+    }
+
+    public function forceDelete(AuthUser $authUser, Issue $issue): bool
+    {
+        return $authUser->can('force_delete_issue');
+    }
+
     public function decide(AuthUser $authUser, Issue $issue): bool
     {
         return $authUser->can('decide_issue') && $this->withinDivision($authUser, $issue);

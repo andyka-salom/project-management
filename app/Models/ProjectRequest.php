@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
@@ -11,6 +12,8 @@ use App\Models\Scopes\DivisionScope;
 #[ScopedBy([DivisionScope::class])]
 class ProjectRequest extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'division_id',
         'title',
