@@ -28,14 +28,20 @@ class MonthlyTicketTrendChart extends ChartWidget
     protected function getData(): array
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('super_admin');
+        $isGlobalAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole(['super_admin', 'admin']);
+        $ledDivisionIds = $user ? $user->ledDivisionIds() : [];
 
         // Get the earliest ticket date
         $earliestTicketQuery = Ticket::query();
 
-        if (!$isSuperAdmin) {
-            $earliestTicketQuery->whereHas('project.members', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+        if (!$isGlobalAdmin) {
+            $earliestTicketQuery->whereHas('project', function ($q) use ($user, $ledDivisionIds) {
+                $q->where(function ($sub) use ($user, $ledDivisionIds) {
+                    $sub->whereHas('members', fn ($memberQ) => $memberQ->where('user_id', $user->id));
+                    if (!empty($ledDivisionIds)) {
+                        $sub->orWhereIn('division_id', $ledDivisionIds);
+                    }
+                });
             });
         }
 
@@ -83,9 +89,14 @@ class MonthlyTicketTrendChart extends ChartWidget
             ->groupByRaw("$yearKey, $monthKey")
             ->orderByRaw("$yearKey, $monthKey");
 
-        if (!$isSuperAdmin) {
-            $ticketsQuery->whereHas('project.members', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+        if (!$isGlobalAdmin) {
+            $ticketsQuery->whereHas('project', function ($q) use ($user, $ledDivisionIds) {
+                $q->where(function ($sub) use ($user, $ledDivisionIds) {
+                    $sub->whereHas('members', fn ($memberQ) => $memberQ->where('user_id', $user->id));
+                    if (!empty($ledDivisionIds)) {
+                        $sub->orWhereIn('division_id', $ledDivisionIds);
+                    }
+                });
             });
         }
 

@@ -26,8 +26,18 @@ class UserStatisticsChart extends ChartWidget
     protected function getData(): array
     {
         $users = User::query()
-            ->when(!auth()->user()->hasRole('super_admin'), function ($query) {
-                $query->where('id', auth()->id());
+            ->when(!auth()->user()->hasRole(['super_admin', 'admin']), function ($query) {
+                $user = auth()->user();
+                $ledDivisionIds = $user ? $user->ledDivisionIds() : [];
+                if (!empty($ledDivisionIds)) {
+                    $query->where(function($q) use ($user, $ledDivisionIds) {
+                        $q->whereHas('divisions', function ($divQ) use ($ledDivisionIds) {
+                            $divQ->whereIn('divisions.id', $ledDivisionIds);
+                        })->orWhere('users.id', $user->id);
+                    });
+                } else {
+                    $query->where('users.id', $user->id);
+                }
             })
             ->withCount([
                 'projects as total_projects',

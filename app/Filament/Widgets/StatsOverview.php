@@ -22,57 +22,27 @@ class StatsOverview extends BaseWidget
     protected function getStats(): array
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('super_admin');
+        $isGlobalAdmin = $user->hasRole(['super_admin', 'admin']);
+        $ledDivisionIds = $user->ledDivisionIds();
 
-        if ($isSuperAdmin) {
-            return $this->getSuperAdminStats();
-        } else {
-            return $this->getUserStats();
+        // Builder for projects
+        $myProjectIdsQuery = Project::query();
+        if (!$isGlobalAdmin) {
+            $myProjectIdsQuery->where(function ($query) use ($user, $ledDivisionIds) {
+                $query->whereHas('members', fn ($q) => $q->where('user_id', $user->id));
+                if (!empty($ledDivisionIds)) {
+                    $query->orWhereIn('division_id', $ledDivisionIds);
+                }
+            });
         }
-    }
+        $myProjectIds = $myProjectIdsQuery->pluck('id')->toArray();
+        $myProjectsCount = count($myProjectIds);
 
-    protected function getSuperAdminStats(): array
-    {
-        $totalProjects = Project::count();
-        $totalTickets = Ticket::count();
-        $usersCount = User::count();
-        $myTickets = DB::table('tickets')
-            ->join('ticket_users', 'tickets.id', '=', 'ticket_users.ticket_id')
-            ->where('ticket_users.user_id', auth()->id())
-            ->count();
-
-        return [
-            Stat::make('Total Projects', $totalProjects)
-                ->description('Active projects in the system')
-                ->descriptionIcon('heroicon-m-rectangle-stack')
-                ->color('primary'),
-
-            Stat::make('Total Tickets', $totalTickets)
-                ->description('Tickets across all projects')
-                ->descriptionIcon('heroicon-m-ticket')
-                ->color('success'),
-
-            Stat::make('My Assigned Tickets', $myTickets)
-                ->description('Tickets assigned to you')
-                ->descriptionIcon('heroicon-m-user-circle')
-                ->color('info'),
-
-            Stat::make('Team Members', $usersCount)
-                ->description('Registered users')
-                ->descriptionIcon('heroicon-m-users')
-                ->color('gray'),
-        ];
-    }
-
-    protected function getUserStats(): array
-    {
-        $user = auth()->user();
-        
-        $myProjects = $user->projects()->count();
-        
-        $myProjectIds = $user->projects()->pluck('projects.id')->toArray();
-
-        $projectTickets = Ticket::whereIn('project_id', $myProjectIds)->count();
+        $totalTicketsQuery = Ticket::query();
+        if (!$isGlobalAdmin) {
+            $totalTicketsQuery->whereIn('project_id', $myProjectIds);
+        }
+        $projectTicketsCount = $totalTicketsQuery->count();
 
         $myAssignedTickets = DB::table('tickets')
             ->join('ticket_users', 'tickets.id', '=', 'ticket_users.ticket_id')
@@ -81,9 +51,11 @@ class StatsOverview extends BaseWidget
 
         $myCreatedTickets = Ticket::where('created_by', $user->id)->count();
 
-        $newTicketsThisWeek = Ticket::whereIn('project_id', $myProjectIds)
-            ->where('tickets.created_at', '>=', Carbon::now()->subDays(7))
-            ->count();
+        $newTicketsThisWeekQuery = Ticket::query()->where('created_at', '>=', Carbon::now()->subDays(7));
+        if (!$isGlobalAdmin) {
+            $newTicketsThisWeekQuery->whereIn('project_id', $myProjectIds);
+        }
+        $newTicketsThisWeek = $newTicketsThisWeekQuery->count();
 
         $myOverdueTickets = DB::table('tickets')
             ->join('ticket_users', 'tickets.id', '=', 'ticket_users.ticket_id')
@@ -101,50 +73,66 @@ class StatsOverview extends BaseWidget
             ->where('tickets.updated_at', '>=', Carbon::now()->subDays(7))
             ->count();
 
-        $teamMembers = User::whereHas('projects', function ($query) use ($myProjectIds) {
-            $query->whereIn('projects.id', $myProjectIds);
-        })->where('id', '!=', $user->id)->count();
+        $teamMembersQuery = User::query();
+        if (!$isGlobalAdmin) {
+            $teamMembersQuery->whereHas('projects', function ($query) use ($myProjectIds) {
+                $query->whereIn('projects.id', $myProjectIds);
+            })->where('id', '!=', $user->id);
+        }
+        $teamMembers = $teamMembersQuery->count();
 
-        return [
-            Stat::make('My Projects', $myProjects)
-                ->description('Projects you are member of')
+        $stats = [];
+
+        if ($isGlobalAdmin) {
+            $stats[] = Stat::make('Total Projects', $myProjectsCount)
+                ->description('Active projects in the system')
                 ->descriptionIcon('heroicon-m-rectangle-stack')
-                ->color('primary'),
-
-            Stat::make('My Assigned Tickets', $myAssignedTickets)
-                ->description('Tickets assigned to you')
-                ->descriptionIcon('heroicon-m-user-circle')
-                ->color($myAssignedTickets > 10 ? 'danger' : ($myAssignedTickets > 5 ? 'warning' : 'success')),
-
-            Stat::make('My Created Tickets', $myCreatedTickets)
-                ->description('Tickets you created')
-                ->descriptionIcon('heroicon-m-pencil-square')
-                ->color('info'),
-
-            Stat::make('Project Tickets', $projectTickets)
-                ->description('Total tickets in your projects')
+                ->color('primary');
+            $stats[] = Stat::make('Total Tickets', $projectTicketsCount)
+                ->description('Tickets across all projects')
                 ->descriptionIcon('heroicon-m-ticket')
-                ->color('success'),
+                ->color('success');
+        } else {
+            $stats[] = Stat::make('Scope Projects', $myProjectsCount)
+                ->description('Projects in your scope')
+                ->descriptionIcon('heroicon-m-rectangle-stack')
+                ->color('primary');
+            $stats[] = Stat::make('Scope Tickets', $projectTicketsCount)
+                ->description('Total tickets in your scope')
+                ->descriptionIcon('heroicon-m-ticket')
+                ->color('success');
+        }
 
-            Stat::make('Completed This Week', $myCompletedThisWeek)
-                ->description('Your completed tickets')
-                ->descriptionIcon('heroicon-m-check-circle')
-                ->color($myCompletedThisWeek > 0 ? 'success' : 'gray'),
+        $stats[] = Stat::make('My Assigned Tickets', $myAssignedTickets)
+            ->description('Tickets assigned to you')
+            ->descriptionIcon('heroicon-m-user-circle')
+            ->color($myAssignedTickets > 10 ? 'danger' : ($myAssignedTickets > 5 ? 'warning' : 'success'));
+        
+        $stats[] = Stat::make('My Created Tickets', $myCreatedTickets)
+            ->description('Tickets you created')
+            ->descriptionIcon('heroicon-m-pencil-square')
+            ->color('info');
 
-            Stat::make('New Tasks This Week', $newTicketsThisWeek)
-                ->description('Created in your projects')
-                ->descriptionIcon('heroicon-m-plus-circle')
-                ->color('info'),
+        $stats[] = Stat::make('Completed This Week', $myCompletedThisWeek)
+            ->description('Your completed tickets')
+            ->descriptionIcon('heroicon-m-check-circle')
+            ->color($myCompletedThisWeek > 0 ? 'success' : 'gray');
 
-            Stat::make('My Overdue Tasks', $myOverdueTickets)
-                ->description('Your past due tickets')
-                ->descriptionIcon('heroicon-m-exclamation-triangle')
-                ->color($myOverdueTickets > 0 ? 'danger' : 'success'),
+        $stats[] = Stat::make('New Tasks This Week', $newTicketsThisWeek)
+            ->description($isGlobalAdmin ? 'New tickets this week' : 'Created in your scope')
+            ->descriptionIcon('heroicon-m-plus-circle')
+            ->color('info');
 
-            Stat::make('Team Members', $teamMembers)
-                ->description('People in your projects')
-                ->descriptionIcon('heroicon-m-users')
-                ->color('gray'),
-        ];
+        $stats[] = Stat::make('My Overdue Tasks', $myOverdueTickets)
+            ->description('Your past due tickets')
+            ->descriptionIcon('heroicon-m-exclamation-triangle')
+            ->color($myOverdueTickets > 0 ? 'danger' : 'success');
+
+        $stats[] = Stat::make('Team Members', $teamMembers)
+            ->description($isGlobalAdmin ? 'Total registered users' : 'People in your scope')
+            ->descriptionIcon('heroicon-m-users')
+            ->color('gray');
+
+        return $stats;
     }
 }

@@ -28,16 +28,20 @@ class TicketsPerProjectChart extends ChartWidget
     protected function getData(): array
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('super_admin');
+        $isGlobalAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole(['super_admin', 'admin']);
+        $ledDivisionIds = $user ? $user->ledDivisionIds() : [];
         
         // Query projects based on user role
         $projectsQuery = Project::query()
             ->withCount('tickets')
             ->orderBy('name');
             
-        if (!$isSuperAdmin) {
-            $projectsQuery->whereHas('members', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
+        if (!$isGlobalAdmin) {
+            $projectsQuery->where(function ($q) use ($user, $ledDivisionIds) {
+                $q->whereHas('members', fn ($sq) => $sq->where('user_id', $user->id));
+                if (!empty($ledDivisionIds)) {
+                    $q->orWhereIn('division_id', $ledDivisionIds);
+                }
             });
         }
         

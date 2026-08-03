@@ -40,14 +40,18 @@ class ProjectTimeline extends Widget
             $query->orderBy('start_date');
         }
             
-        $userIsSuperAdmin = auth()->user() && (
-            (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('super_admin'))
-            || (isset(auth()->user()->role) && auth()->user()->role === 'super_admin')
-        );
+        $user = auth()->user();
+        $isGlobalAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole(['super_admin', 'admin']);
+        $ledDivisionIds = $user ? $user->ledDivisionIds() : [];
 
-        if (!$userIsSuperAdmin) {
-            $query->whereHas('members', function ($query) {
-                $query->where('user_id', auth()->id());
+        if (!$isGlobalAdmin) {
+            $query->where(function ($q) use ($user, $ledDivisionIds) {
+                $q->whereHas('members', function ($sq) use ($user) {
+                    $sq->where('user_id', $user->id);
+                });
+                if (!empty($ledDivisionIds)) {
+                    $q->orWhereIn('division_id', $ledDivisionIds);
+                }
             });
         }
             
@@ -70,14 +74,18 @@ class ProjectTimeline extends Widget
             ->whereNotNull('start_date')
             ->whereNotNull('end_date');
             
-        $userIsSuperAdmin = auth()->user() && (
-            (method_exists(auth()->user(), 'hasRole') && auth()->user()->hasRole('super_admin'))
-            || (isset(auth()->user()->role) && auth()->user()->role === 'super_admin')
-        );
+        $user = auth()->user();
+        $isGlobalAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole(['super_admin', 'admin']);
+        $ledDivisionIds = $user ? $user->ledDivisionIds() : [];
 
-        if (!$userIsSuperAdmin) {
-            $query->whereHas('members', function ($query) {
-                $query->where('user_id', auth()->id());
+        if (!$isGlobalAdmin) {
+            $query->where(function ($q) use ($user, $ledDivisionIds) {
+                $q->whereHas('members', function ($sq) use ($user) {
+                    $sq->where('user_id', $user->id);
+                });
+                if (!empty($ledDivisionIds)) {
+                    $q->orWhereIn('division_id', $ledDivisionIds);
+                }
             });
         }
             
