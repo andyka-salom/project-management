@@ -21,7 +21,7 @@ return [
             'pages' => true,
             'widgets' => true,
             'resources' => true,
-            'custom_permissions' => false,
+            'custom_permissions' => true,
         ],
     ],
 
@@ -100,7 +100,7 @@ return [
 
     'permissions' => [
         'separator' => ':',
-        'case' => 'pascal',
+        'case' => 'snake',
         'generate' => true,
     ],
 
@@ -226,7 +226,36 @@ return [
     |
     */
 
-    'custom_permissions' => [],
+    'custom_permissions' => [
+        // Project Request workflow
+        'assign_analyst_project_request' => 'Assign Analyst (Project Request)',
+        'submit_analysis_project_request' => 'Submit Analysis (Project Request)',
+        'recommend_project_request' => 'Recommend (Project Request)',
+        'approve_project_request' => 'Approve (Project Request)',
+        'manage_sdlc_phase' => 'Manage SDLC Phase',
+
+        // Issue workflow
+        'decide_issue' => 'Decide Issue',
+        'act_issue' => 'Act on Issue',
+        'verify_issue' => 'Verify Issue',
+
+        // Legacy resource permissions (underscore naming, used by resource-level gates)
+        'view_any_project_request' => 'View Any Project Request (legacy)',
+        'view_project_request' => 'View Project Request (legacy)',
+        'create_project_request' => 'Create Project Request (legacy)',
+        'update_project_request' => 'Update Project Request (legacy)',
+        'delete_project_request' => 'Delete Project Request (legacy)',
+        'view_any_ticket_comment' => 'View Any Ticket Comment (legacy)',
+        'view_ticket_comment' => 'View Ticket Comment (legacy)',
+        'create_ticket_comment' => 'Create Ticket Comment (legacy)',
+        'update_ticket_comment' => 'Update Ticket Comment (legacy)',
+        'delete_ticket_comment' => 'Delete Ticket Comment (legacy)',
+        'view_any_ticket_priority' => 'View Any Ticket Priority (legacy)',
+        'view_ticket_priority' => 'View Ticket Priority (legacy)',
+        'create_ticket_priority' => 'Create Ticket Priority (legacy)',
+        'update_ticket_priority' => 'Update Ticket Priority (legacy)',
+        'delete_ticket_priority' => 'Delete Ticket Priority (legacy)',
+    ],
 
     /*
     |--------------------------------------------------------------------------
