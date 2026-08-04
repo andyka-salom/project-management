@@ -23,10 +23,9 @@ class SystemSettings extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    public static function getNavigationIcon(): ?string
+    public static function getNavigationIcon(): string | \BackedEnum | null
     {
-        if (Heroicon::Cog6Tooth instanceof \BackedEnum) { return Heroicon::Cog6Tooth->value; }
-        return (string) Heroicon::Cog6Tooth;
+        return Heroicon::Cog6Tooth;
     }
     public static function getNavigationGroup(): ?string
     {
