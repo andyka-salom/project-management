@@ -27,6 +27,8 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Admin User', 'email' => 'admin@example.com', 'role' => 'admin'],
         ];
 
+        $this->call(InformationTechnologySeeder::class);
+
         foreach ($users as $userData) {
             $user = User::firstOrCreate(
                 ['email' => $userData['email']],
