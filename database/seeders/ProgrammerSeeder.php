@@ -13,17 +13,24 @@ class ProgrammerSeeder extends Seeder
         $programmer = Role::firstOrCreate(['name' => 'programmer']);
 
         $programmerPermissions = Permission::whereIn('name', [
+            // Projects
             'view_project', 'view_any_project',
-            'view_ticket', 'view_any_ticket', 'create_ticket', 'update_ticket',
-            'view_ticket::priority', 'view_any_ticket::priority',
+            // Issues
+            'view_issue', 'view_any_issue', 
+            'act_issue',
+            // Tasks (Tickets) & Comments
+            'view_ticket', 'view_any_ticket', 'update_ticket', // NO create_ticket
             'view_ticket::comment', 'view_any_ticket::comment', 'create_ticket::comment',
+            'view_ticket::priority', 'view_any_ticket::priority',
+            // General
             'view_notification', 'view_any_notification',
-            'view_issue', 'view_any_issue', 'act_issue',
-            'page_Dashboard', 'widget_MyTasksWidget', 'page_ProjectBoard', 'page_Schedule'
+            // Pages & Widgets
+            'page_Dashboard', 'widget_MyTasksWidget', 'page_ProjectBoard', 'page_Schedule',
+            'page_TicketTimeline', 'page_Leaderboard', 'page_UserContributions'
         ])->get();
 
         $programmer->syncPermissions($programmerPermissions);
 
-        $this->command->info('programmer role seeded with ' . $programmerPermissions->count() . ' permissions.');
+        $this->command->info('programmer role seeded with ' . $programmerPermissions->count() . ' permissions (SDLC aligned).');
     }
 }

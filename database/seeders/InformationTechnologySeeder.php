@@ -10,6 +10,7 @@ class InformationTechnologySeeder extends Seeder
     public function run(): void
     {
         $users = [
+            ['name' => 'Super Admin IT', 'email' => 'superadmin@heavenscent.com', 'role' => 'super_admin'],
             ['name' => 'Calvin Klaus', 'email' => 'calvinheavenscent@gmail.com', 'role' => 'cto'],
             ['name' => 'Andyka Salom', 'email' => 'andykasalom@gmail.com', 'role' => 'manager'],
             ['name' => 'Athiya', 'email' => 'rzqthya@gmail.com', 'role' => 'system_analyst'],

@@ -15,19 +15,7 @@ class DivisionSeeder extends Seeder
     {
         // code => [name, color]
         $divisions = [
-            // Calvin's group
-            'HR'     => ['Human Resources', '#3B82F6'],
-            'GA'     => ['General Affairs', '#2563EB'],
-            'LND'    => ['Learning & Development', '#1D4ED8'],
             'IT'     => ['Information Technology', '#0EA5E9'],
-            // Ayu's group
-            'FIN'    => ['Finance', '#10B981'],
-            'ACC'    => ['Accounting', '#059669'],
-            // Lita's group
-            'MKTOPS' => ['Marketing Operasional', '#F59E0B'],
-            'MKTAWR' => ['Marketing Awareness', '#F97316'],
-            'MKTRND' => ['Marketing RND', '#EA580C'],
-            'CRM'    => ['CRM', '#D97706'],
         ];
 
         foreach ($divisions as $code => [$name, $color]) {
@@ -55,9 +43,7 @@ class DivisionSeeder extends Seeder
         Role::firstOrCreate(['name' => 'chief']);
 
         $chiefs = [
-            'Calvin' => ['email' => 'calvin@heavenscent.com', 'codes' => ['HR', 'GA', 'LND', 'IT']],
-            'Ayu'    => ['email' => 'ayu@heavenscent.com',    'codes' => ['FIN', 'ACC']],
-            'Lita'   => ['email' => 'lita@heavenscent.com',   'codes' => ['MKTOPS', 'MKTAWR', 'MKTRND', 'CRM']],
+            'Calvin' => ['email' => 'calvinheavenscent@gmail.com', 'codes' => ['IT']],
         ];
 
         foreach ($chiefs as $name => $data) {
