@@ -12,13 +12,17 @@ class AdminSeeder extends Seeder
     {
         $admin = Role::firstOrCreate(['name' => 'admin']);
 
-        // admin mendapatkan semua permission KECUALI delete_user
+        // admin: all permissions except delete_user and force_delete related
         $adminPermissions = Permission::whereNotIn('name', [
-            'delete_user',
+            'delete_user', 
+            'force_delete_project', 'force_delete_any_project',
+            'force_delete_issue', 'force_delete_any_issue',
+            'force_delete_ticket', 'force_delete_any_ticket',
+            'force_delete_division', 'force_delete_any_division'
         ])->get();
-
+        
         $admin->syncPermissions($adminPermissions);
 
-        $this->command->info('admin role seeded with ' . $adminPermissions->count() . ' permissions (excluding delete_user).');
+        $this->command->info('admin role seeded with ' . $adminPermissions->count() . ' permissions.');
     }
 }
