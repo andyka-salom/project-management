@@ -21,7 +21,9 @@ return new class extends Migration
         });
         
         // Get all existing projects that don't have external access
-        $projects = Project::whereDoesntHave('externalAccess')->get();
+        $projects = DB::table('projects')
+            ->whereNotIn('id', DB::table('external_access')->select('project_id'))
+            ->get();
         
         $generatedCredentials = [];
         
@@ -31,12 +33,14 @@ return new class extends Migration
             $password = Str::random(8);
             
             // External access record
-            ExternalAccess::create([
+            DB::table('external_access')->insert([
                 'project_id' => $project->id,
                 'access_token' => $accessToken,
                 'password' => $password,
                 'is_active' => true,
                 'migration_generated' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
             
             // Store credentials for logging
@@ -66,7 +70,7 @@ return new class extends Migration
     public function down(): void
     {
         // Remove only the records created by this migration
-        ExternalAccess::where('migration_generated', true)->delete();
+        DB::table('external_access')->where('migration_generated', true)->delete();
         
         // Remove the temporary column
         Schema::table('external_access', function (Blueprint $table) {
