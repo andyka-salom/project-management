@@ -165,6 +165,43 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
             ->exists();
     }
 
+    /**
+     * Highest org rank this user holds across any division:
+     * chief=3, manager=2, staff=1, no position=0. Used to decide whether a
+     * schedule invite needs approval (invite downward/peer = auto-accept,
+     * upward = pending).
+     */
+    public function positionRank(): int
+    {
+        $ranks = ['chief' => 3, 'manager' => 2, 'staff' => 1];
+
+        return $this->divisions()
+            ->get()
+            ->max(fn (Division $division) => $ranks[$division->pivot->position] ?? 0) ?? 0;
+    }
+
+    public function ownedSchedules(): HasMany
+    {
+        return $this->hasMany(Schedule::class, 'owner_id');
+    }
+
+    public function schedules(): BelongsToMany
+    {
+        return $this->belongsToMany(Schedule::class, 'schedule_user')
+            ->withPivot(['status', 'is_organizer', 'responded_at'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Invites awaiting this user's approval (invited by a lower-ranked user).
+     */
+    public function pendingScheduleInvites(): BelongsToMany
+    {
+        return $this->schedules()
+            ->wherePivot('status', 'pending')
+            ->wherePivot('is_organizer', false);
+    }
+
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);

@@ -6,82 +6,65 @@ namespace App\Policies;
 
 use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\ProjectRequest;
-use App\Support\DivisionAccess;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProjectRequestPolicy
 {
     use HandlesAuthorization;
-
-    /**
-     * The division wall: a user may only act on a request inside a division they
-     * belong to (global operators and unassigned/legacy requests are exempt).
-     */
-    protected function withinDivision(AuthUser $authUser, ProjectRequest $projectRequest): bool
-    {
-        if (DivisionAccess::hasGlobalAccess($authUser)) {
-            return true;
-        }
-
-        if (is_null($projectRequest->division_id)) {
-            return true;
-        }
-
-        return in_array($projectRequest->division_id, $authUser->divisionIds(), true);
-    }
-
+    
     public function viewAny(AuthUser $authUser): bool
     {
-        return $authUser->can('view_any_project_request');
+        return $authUser->can('view_any_project::request');
     }
 
     public function view(AuthUser $authUser, ProjectRequest $projectRequest): bool
     {
-        return $authUser->can('view_project_request') && $this->withinDivision($authUser, $projectRequest);
+        return $authUser->can('view_project::request');
     }
 
     public function create(AuthUser $authUser): bool
     {
-        return $authUser->can('create_project_request');
+        return $authUser->can('create_project::request');
     }
 
     public function update(AuthUser $authUser, ProjectRequest $projectRequest): bool
     {
-        return $authUser->can('update_project_request') && $this->withinDivision($authUser, $projectRequest);
+        return $authUser->can('update_project::request');
     }
 
     public function delete(AuthUser $authUser, ProjectRequest $projectRequest): bool
     {
-        return $authUser->can('delete_project_request') && $this->withinDivision($authUser, $projectRequest);
+        return $authUser->can('delete_project::request');
     }
 
     public function restore(AuthUser $authUser, ProjectRequest $projectRequest): bool
     {
-        return $authUser->can('restore_project_request');
+        return $authUser->can('restore_project::request');
     }
 
     public function forceDelete(AuthUser $authUser, ProjectRequest $projectRequest): bool
     {
-        return $authUser->can('force_delete_project_request');
+        return $authUser->can('force_delete_project::request');
     }
 
-    public function assignAnalyst(AuthUser $authUser): bool
+    public function forceDeleteAny(AuthUser $authUser): bool
     {
-        return $authUser->can('assign_analyst_project_request');
+        return $authUser->can('force_delete_any_project::request');
     }
 
-    public function submitAnalysis(AuthUser $authUser): bool
+    public function restoreAny(AuthUser $authUser): bool
     {
-        return $authUser->can('submit_analysis_project_request');
+        return $authUser->can('restore_any_project::request');
     }
 
-    public function recommend(AuthUser $authUser): bool
+    public function replicate(AuthUser $authUser, ProjectRequest $projectRequest): bool
     {
-        return $authUser->can('recommend_project_request');
+        return $authUser->can('replicate_project::request');
     }
 
-    public function approve(AuthUser $authUser): bool
+    public function reorder(AuthUser $authUser): bool
     {
-        return $authUser->can('approve_project_request');
+        return $authUser->can('reorder_project::request');
     }
+
 }
