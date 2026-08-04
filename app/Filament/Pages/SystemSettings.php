@@ -25,7 +25,7 @@ class SystemSettings extends Page implements HasForms
 
     public static function getNavigationIcon(): string | \BackedEnum | null
     {
-        return Heroicon::Cog6Tooth;
+        return 'heroicon-o-cog-6-tooth';
     }
     public static function getNavigationGroup(): ?string
     {
