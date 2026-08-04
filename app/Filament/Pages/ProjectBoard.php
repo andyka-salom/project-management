@@ -21,7 +21,11 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ProjectBoard extends Page
 {
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-view-columns';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-view-columns' instanceof \BackedEnum) { return 'heroicon-o-view-columns'->value; }
+        return (string) 'heroicon-o-view-columns';
+    }
 
     protected string $view = 'filament.pages.project-board';
 
@@ -29,7 +33,10 @@ class ProjectBoard extends Page
 
     protected static ?string $navigationLabel = 'Project Board';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Work';
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Work';
+    }
 
     protected static ?int $navigationSort = 4;
 

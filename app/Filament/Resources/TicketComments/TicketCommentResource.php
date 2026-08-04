@@ -22,7 +22,11 @@ class TicketCommentResource extends Resource
 {
     protected static ?string $model = TicketComment::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-rectangle-stack' instanceof \BackedEnum) { return 'heroicon-o-rectangle-stack'->value; }
+        return (string) 'heroicon-o-rectangle-stack';
+    }
 
     protected static bool $shouldRegisterNavigation = false;
 

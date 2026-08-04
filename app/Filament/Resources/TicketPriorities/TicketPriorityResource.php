@@ -28,7 +28,11 @@ class TicketPriorityResource extends Resource
 {
     protected static ?string $model = TicketPriority::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-flag';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-flag' instanceof \BackedEnum) { return 'heroicon-o-flag'->value; }
+        return (string) 'heroicon-o-flag';
+    }
 
     protected static ?string $navigationLabel = 'Task Priorities';
 
@@ -36,7 +40,10 @@ class TicketPriorityResource extends Resource
 
     protected static ?string $modelLabel = 'Task Priority';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Settings';
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Settings';
+    }
 
     public static function form(Schema $schema): Schema
     {

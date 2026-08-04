@@ -28,13 +28,20 @@ class Schedule extends Page implements HasActions, HasForms
     use InteractsWithActions;
     use InteractsWithForms;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-calendar-days' instanceof \BackedEnum) { return 'heroicon-o-calendar-days'->value; }
+        return (string) 'heroicon-o-calendar-days';
+    }
 
     protected static ?string $navigationLabel = 'Schedule';
 
     protected static ?string $title = 'Schedule';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Work';
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Work';
+    }
 
     protected static ?int $navigationSort = 7;
 

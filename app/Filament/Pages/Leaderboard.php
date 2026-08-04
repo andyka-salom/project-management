@@ -18,12 +18,19 @@ class Leaderboard extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-trophy';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-trophy' instanceof \BackedEnum) { return 'heroicon-o-trophy'->value; }
+        return (string) 'heroicon-o-trophy';
+    }
     protected static ?string $navigationLabel = 'Leaderboard';
     protected static ?string $title = 'Contribution Leaderboard';
     protected static ?int $navigationSort = 6;
     protected string $view = 'filament.pages.leaderboard';
-    protected static string | \UnitEnum | null $navigationGroup = 'Analytics';
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Analytics';
+    }
     protected static ?string $slug = 'leaderboard';
 
     public string $timeRange = '7days'; // Changed from 'thisweek' to '7days'

@@ -22,7 +22,11 @@ class NotificationResource extends Resource
 {
     protected static ?string $model = Notification::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-bell';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-bell' instanceof \BackedEnum) { return 'heroicon-o-bell'->value; }
+        return (string) 'heroicon-o-bell';
+    }
     
     protected static ?string $navigationLabel = 'Notifications';
     

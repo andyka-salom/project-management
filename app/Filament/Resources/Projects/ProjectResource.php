@@ -52,8 +52,15 @@ class ProjectResource extends Resource
 {
     protected static ?string $model = Project::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static string|\UnitEnum|null $navigationGroup = 'Work';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-rectangle-stack' instanceof \BackedEnum) { return 'heroicon-o-rectangle-stack'->value; }
+        return (string) 'heroicon-o-rectangle-stack';
+    }
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Work';
+    }
     protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema

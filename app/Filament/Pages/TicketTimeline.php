@@ -18,12 +18,19 @@ class TicketTimeline extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-calendar' instanceof \BackedEnum) { return 'heroicon-o-calendar'->value; }
+        return (string) 'heroicon-o-calendar';
+    }
     protected static ?string $navigationLabel = 'Task Timeline';
     protected static ?string $title = 'Task Timeline';
     protected static ?int $navigationSort = 6;
     protected string $view = 'filament.pages.ticket-timeline';
-    protected static string|\UnitEnum|null $navigationGroup = 'Work';
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Work';
+    }
     protected static ?string $slug = 'ticket-timeline/{project_id?}';
 
     public function getSubheading(): ?string

@@ -15,7 +15,11 @@ use Filament\Pages\Dashboard as BaseDashboard;
 
 class Dashboard extends BaseDashboard
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-home';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-home' instanceof \BackedEnum) { return 'heroicon-o-home'->value; }
+        return (string) 'heroicon-o-home';
+    }
 
     public function getTitle(): string
     {

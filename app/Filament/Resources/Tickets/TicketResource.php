@@ -38,7 +38,11 @@ class TicketResource extends Resource
 {
     protected static ?string $model = Ticket::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-ticket';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-ticket' instanceof \BackedEnum) { return 'heroicon-o-ticket'->value; }
+        return (string) 'heroicon-o-ticket';
+    }
 
     protected static ?string $navigationLabel = 'Tasks';
 
@@ -46,7 +50,10 @@ class TicketResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Tasks';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Work';
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Work';
+    }
 
     protected static ?int $navigationSort = 5;
 

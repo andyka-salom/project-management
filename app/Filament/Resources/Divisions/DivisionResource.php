@@ -25,11 +25,18 @@ class DivisionResource extends Resource
 {
     protected static ?string $model = Division::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-office-2';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-building-office-2' instanceof \BackedEnum) { return 'heroicon-o-building-office-2'->value; }
+        return (string) 'heroicon-o-building-office-2';
+    }
 
     protected static ?string $navigationLabel = 'Divisions';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Organization';
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Organization';
+    }
 
     protected static ?int $navigationSort = 1;
 

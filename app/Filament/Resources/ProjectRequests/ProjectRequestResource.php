@@ -37,8 +37,15 @@ class ProjectRequestResource extends Resource
 {
     protected static ?string $model = ProjectRequest::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-plus';
-    protected static string|\UnitEnum|null $navigationGroup = 'Requests';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-document-plus' instanceof \BackedEnum) { return 'heroicon-o-document-plus'->value; }
+        return (string) 'heroicon-o-document-plus';
+    }
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Requests';
+    }
     protected static ?int $navigationSort = 0;
     protected static ?string $navigationLabel = 'Requests';
     protected static ?string $modelLabel = 'Request';

@@ -19,12 +19,19 @@ class UserContributions extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-chart-bar-square';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-chart-bar-square' instanceof \BackedEnum) { return 'heroicon-o-chart-bar-square'->value; }
+        return (string) 'heroicon-o-chart-bar-square';
+    }
     protected static ?string $navigationLabel = 'User Contributions';
     protected static ?string $title = 'User Contributions';
     protected static ?int $navigationSort = 5;
     protected string $view = 'filament.pages.user-contributions';
-    protected static string | \UnitEnum | null $navigationGroup = 'Analytics';
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Analytics';
+    }
     protected static ?string $slug = 'user-contributions';
 
     public function getSubheading(): ?string

@@ -11,9 +11,16 @@ use Livewire\Attributes\On;
 
 class EpicsOverview extends Page
 {
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-flag';
+    public static function getNavigationIcon(): ?string
+    {
+        if ('heroicon-o-flag' instanceof \BackedEnum) { return 'heroicon-o-flag'->value; }
+        return (string) 'heroicon-o-flag';
+    }
     protected string $view = 'filament.pages.epics-overview';
-    protected static string|\UnitEnum|null $navigationGroup = 'Work';
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Work';
+    }
     protected static ?string $navigationLabel = 'Initiatives';
     protected static ?string $title = 'Initiatives Overview';
     protected static ?int $navigationSort = 7;
