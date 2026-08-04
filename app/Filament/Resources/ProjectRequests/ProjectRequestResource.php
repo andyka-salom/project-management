@@ -300,6 +300,6 @@ class ProjectRequestResource extends Resource
             return false;
         }
 
-        return $user->can('view_any_project_request');
+        return $user->can('view_any_project::request');
     }
 }
