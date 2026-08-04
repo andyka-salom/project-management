@@ -25,7 +25,7 @@ class SystemSettings extends Page implements HasForms
 
     public static function getNavigationIcon(): string | \BackedEnum | null
     {
-        return 'heroicon-o-cog-6-tooth';
+        return Heroicon::Cog6Tooth;
     }
     public static function getNavigationGroup(): ?string
     {
@@ -53,7 +53,7 @@ class SystemSettings extends Page implements HasForms
             ->components([
                 Section::make('Navigation Layout')
                     ->description('Choose your preferred navigation style')
-                    ->icon('heroicon-o-bars-3')
+                    ->icon(Heroicon::Bars3)
                     ->schema([
                         Radio::make('navigation_style')
                             ->label('Layout Style')
@@ -75,7 +75,7 @@ class SystemSettings extends Page implements HasForms
 
                 Section::make('Color Theme')
                     ->description('Personalize your interface colors')
-                    ->icon('heroicon-o-swatch')
+                    ->icon(Heroicon::Swatch)
                     ->schema([
                         Select::make('panel_color')
                             ->label('Primary Color')
