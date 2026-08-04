@@ -22,16 +22,9 @@ class DatabaseSeeder extends Seeder
         $this->call(ProgrammerSeeder::class);
         $this->call(QaSeeder::class);
 
-        // 3. Test users per role
+        // 3. Test user (1 Admin Account)
         $users = [
-            ['name' => 'Super Admin', 'email' => 'superadmin@example.com', 'role' => 'super_admin'],
             ['name' => 'Admin User', 'email' => 'admin@example.com', 'role' => 'admin'],
-            ['name' => 'CTO User', 'email' => 'cto@example.com', 'role' => 'cto'],
-            ['name' => 'Manager User', 'email' => 'manager@example.com', 'role' => 'manager'],
-            ['name' => 'System Analyst', 'email' => 'analyst@example.com', 'role' => 'system_analyst'],
-            ['name' => 'Programmer User', 'email' => 'programmer@example.com', 'role' => 'programmer'],
-            ['name' => 'QA User', 'email' => 'qa@example.com', 'role' => 'qa'],
-            ['name' => 'Member User', 'email' => 'member@example.com', 'role' => 'member'],
         ];
 
         foreach ($users as $userData) {
@@ -50,12 +43,12 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->command->info('');
-        $this->command->info('All test users password: password');
+        $this->command->info('Admin user password: password');
 
         // 4. Demo data
         // $this->call(DemoDataSeeder::class);
 
         // 5. Divisions — create org structure and assign existing users/projects/requests
-        $this->call(DivisionSeeder::class);
+        // $this->call(DivisionSeeder::class);
     }
 }
